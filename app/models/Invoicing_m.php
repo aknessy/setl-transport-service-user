@@ -29,18 +29,18 @@ class Invoicing_m extends CI_Model {
 
     public function get_invoice($order_id, $is_logged_in=TRUE){
         if($is_logged_in){
-            $this->db->select('inv.*, c.*, b.*, bk.*')
+            $this->db->select('inv.*,b.*')
                 ->from($this->table . ' as inv')
-                ->join('customers as c', 'inv.customer_id = c.customer_id', 'INNER JOIN')
+                // ->join('customers as c', 'inv.customer_id = c.customer_id', 'INNER JOIN')
                 ->join('buses as b', 'inv.bus_id = b.bus_id')
-                ->join('bookings as bk', 'bk.customer_id = c.customer_id')
+                // ->join('bookings as bk', 'bk.customer_id = c.customer_id')
                 ->where('inv.status', 'UNPAID')
                 ->where('inv.order_id', $order_id);
         }else{
-            $this->db->select('inv.*, b.*, bk.*')
+            $this->db->select('inv.*,b.*')
                 ->from($this->table . ' as inv')
                 ->join('buses as b', 'inv.bus_id = b.bus_id')
-                ->join('bookings as bk', 'inv.booking_id = bk.id')
+                //->join('bookings as bk', 'inv.booking_id = bk.id')
                 ->where('inv.status', 'UNPAID')
                 ->where('inv.order_id', $order_id);
         }

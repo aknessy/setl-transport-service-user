@@ -96,6 +96,7 @@ if ($seats_count % $columns == 0) $rows = $seats_count / $columns;
 else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are covered
 
 ?>
+
 <main>
     <div class="tg-breadcrumb-area tg-breadcrumb-spacing fix p-relative z-index-1 include-bg" data-background="<?=base_url()?>assets/img/breadcrumb/breadcrumb.jpg">
         <div class="tg-hero-top-shadow"></div>
@@ -250,7 +251,7 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                                 <div class="row mb-30 mt-30">
                                     <div class="col-lg-12 col-md-12">
                                         <h5 class="fw-normal fs-7">Pick your preferred seat</h5>
-                                        <form id="seatsForm" method="post" action="<?=base_url('booking/reserve/' . $bus->bus_id . '/' . $travel_to . '/' . $travel_from . '/' . $travel_time . '/' . $travel_date)?>">                                        
+                                        <?=form_open(base_url('booking/reserve/' . $bus->bus_id . '/' . $travel_to . '/' . $travel_from . '/' . $travel_time . '/' . $travel_date), ['id' => 'seatsForm', 'method' => 'POST'])?>                                        
                                             <div class="bg-light mb-15 rounded py-4 px-4">
                                                 <div class="row">
                                                     <input type="hidden" name="total_cost" value="<?=$cost_of_travel?>" class="totalCost" />
@@ -295,7 +296,7 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                                                 ?>
                                                 </div>
                                             </div>
-                                        </form>
+                                        <?=form_close()?>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-end mb-25">                                    
@@ -342,11 +343,11 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                                                             <div class="tg-tour-about-cus-review d-flex mb-40">
                                                                 <div class="tg-tour-about-cus-review-thumb">
                                                                     <?php
-                                                                    if($customer){?>
+                                                                    if($customer && $customer->photo){?>
                                                                         <img src="<?=$aws_base_url . $customer->photo?>" alt="Customer Photo">
                                                                     <?php 
                                                                     }else{?>
-                                                                        <img src="<?=base_url()?>assets/img/tour-details/avatr.png" alt="Customer Photo">
+                                                                        <img src="<?=base_url()?>assets/img/tour-details/thumb-2.jpg" alt="Customer Photo">
                                                                     <?php
                                                                     }?>
                                                                 </div>
@@ -422,7 +423,7 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                                                 </div>
                                                 
                                                 <?php
-                                                if($this->session->loggedin === TRUE){?>
+                                                if($this->session->loggedIn == TRUE || NULL != $this->session->loggedInUserID){?>
                                                 <div id="leaveReview" class="tg-tour-about-review-form-wrap py-5 px-5 rounded bg-white" style="border: 1px solid rgb(243, 243, 243)">
                                                     <h4 class="tg-tour-about-title mb-15">Leave a review</h4>
                                                     <div class="mb-20">
@@ -441,7 +442,7 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                                                         </ul>
                                                     </div>
                                                     <div class="tg-tour-about-review-form">
-                                                        <form action="<?=base_url('review/bus')?>" method="POST">
+                                                        <?=form_open(base_url('review/bus'), ['method' => 'POST'])?>
                                                             <input type="hidden" name="bus_id" value="<?=$this->uri->segment(3)?>" />
                                                             <input type="hidden" name="origin" value="<?=$travel_from?>" />
                                                             <input type="hidden" name="destination" value="<?=$travel_to?>" />
@@ -477,7 +478,7 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </form>
+                                                        <?=form_close()?>
                                                     </div>
                                                 </div>
                                                 <?php

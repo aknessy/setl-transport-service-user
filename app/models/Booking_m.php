@@ -122,4 +122,11 @@ class Booking_m extends CI_Model {
         return $this->db->get()->row();
     }
 
+    /**
+     * Get a booking that is related to an invoice
+     */
+    public function get_booking_rel_inv($booking_id){
+        return $this->db->get_where($this->table, ['id' => $booking_id])->row();
+    }
+
 }

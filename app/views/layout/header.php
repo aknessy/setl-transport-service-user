@@ -12,6 +12,7 @@
     <!-- Place favicon.ico in the root directory -->
 
     <!-- CSS here -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="<?=base_url()?>assets/css/nice-select.css">
     <link rel="stylesheet" href="<?=base_url()?>assets/css/bootstrap.min.css">
@@ -23,6 +24,7 @@
     <link rel="stylesheet" href="<?=base_url()?>assets/css/odometer.css">
     <link rel="stylesheet" href="<?=base_url()?>assets/css/default.css">
     <link rel="stylesheet" href="<?=base_url()?>assets/css/main.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css" />
 
     <script src="<?=base_url()?>assets/js/vendor/jquery.js"></script>
 </head>

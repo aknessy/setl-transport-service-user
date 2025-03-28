@@ -14,7 +14,8 @@
 </style>
 
 <?php 
-    $selected_seats = $invoice->seats;
+    $selected_seats = $user_selected_seats;
+    
     $split = NULL;
     $total_amount = 0;
 
@@ -58,7 +59,7 @@
     </div>
     <div class="tg-booking-form-area tg-booking-form-grid-space pb-50">
         <div class="container">
-            <form method="POST" action="<?=base_url('payment')?>" id="payInvoiceForm" class="row">
+            <?=form_open(base_url('payment'), ['id' => 'payInvoiceForm', 'method' => 'POST', 'class' => 'row'])?>
                 <div id="print-section" class="<?=$this->session->loggedIn == TRUE ? 'col-lg-12':'col-lg-7 col-xl-8 col-sm-12'?>">
                     <div class="card">
                         <div class="card-body bg-light"> 
@@ -73,32 +74,34 @@
                             </div>     
                         </div>
                         <div class="card-body">                    
-                            <div class="row row-cols-3 d-flex align-items-center justify-content-md-between mb-25">
-                                <div class="<?=$invoice->customer_id ? 'col-12 col-md-4 col-lg-4 d-print-flex align-self-center':'d-none'?>">
-                                    <?php 
-                                        if($invoice->customer_id){?>
+                            <div class="row row-cols-3 d-flex align-items-center justify-content-between mb-25">
+                            <?php 
+                                if($this->session->loggedIn == TRUE){
+                                    $customer = $this->customer_m->get_customer($this->session->loggedInUserID);
+                                ?>
+                                    <div class="col-md-4 col-lg-4 d-print-flex align-self-center">
                                         <div class="">
-                                            <!-- <span class="badge rounded text-dark bg-light">Invoice to</span> -->
-                                            <h5 class="mb-0 fw-semibold fs-10"><?=ucwords($invoice->surname . ', ' . $invoice->first_name . ' ' . $invoice->middle_name)?></h5>
-                                            <p class="text-muted mb-0"><?=$invoice->email?> | <?=$invoice->phone?></p>
+                                            <span class="badge rounded text-dark bg-light">Invoice to</span>
+                                            <h5 class="mb-0 fw-semibold fs-10"><?=ucwords($customer->surname . ', ' . $customer->first_name . ' ' . $customer->middle_name)?></h5>
+                                            <p class="text-muted mb-0"><?=$customer->email?> | <?=$customer->phone?></p>
                                         </div>
+                                    </div>
                                     <?php 
-                                        }
-                                    ?>
-                                </div>
-                                <div class="<?=$invoice->customer_id ? 'col-sm-12 col-md-6 col-lg-6':'col-sm-12 col-lg-4 col-md-4'?> d-print-flex align-self-center">                                            
+                                    }
+                                ?>
+                                <div class="col-md-4 col-lg-4 d-print-flex align-self-center">                                            
                                     <div class="">
                                         <address class="fs-10 mb-0">
                                             <strong class="fs-10">Departing From</strong><br/>
-                                            <span class="text-muted"><?=$this->buses_terminal_m->get_terminal($invoice->start_terminal)->terminal_name?></span><br>
+                                            <span class="text-muted"><?=$this->buses_terminal_m->get_terminal($traveling_from)->terminal_name?></span><br>
                                         </address>
                                     </div>
                                 </div> 
-                                <div class="<?=$invoice->customer_id ? 'col-sm-12 col-md-6 col-lg-6':'col-sm-12 col-lg-4 col-md-4'?> d-print-flex align-self-center">
+                                <div class="col-lg-4 col-md-4 d-print-flex align-self-center">
                                     <div class="">
                                         <address class="fs-10 mb-0">
                                             <strong class="fs-10">Arriving At</strong><br>
-                                            <span class="text-muted"><?=$this->buses_terminal_m->get_terminal($invoice->end_terminal)->terminal_name?></span>
+                                            <span class="text-muted"><?=$this->buses_terminal_m->get_terminal($traveling_to)->terminal_name?></span>
                                         </address>
                                     </div>
                                 </div>                       
@@ -196,7 +199,7 @@
                                                     <tr>
                                                         <td colspan="2"></td>
                                                         <td colspan="2" class="fs-12 fw-semibold">Total Seats</td>
-                                                        <td colspan="1" class="fs-12 fw-semibold"><?=number_format($invoice->total_seats)?></td>
+                                                        <td colspan="1" class="fs-12 fw-semibold"><?=number_format($booking->total_seats)?></td>
                                                     </tr>
                                                     <tr>
                                                         <td colspan="2">
@@ -333,7 +336,7 @@
                         </div>
                     </div>
                 </div>
-            </form>
+            <?=form_close()?>
         </div>
     <div>
 </main>
@@ -368,12 +371,29 @@
                 success: function(res){
                     let response = JSON.parse(res);
 
-                    if(response.payable_amt > 0){
-                        $('#amountPayable').text(response.payable_amt);
-                        $('#amountToPay').val(response.payable_amt);
-                        $('#discountCalcMsg').text(response.mgs);
+                    if(response.applicable_discount > 0){
+                        let discountRate = parseInt(response.applicable_discount);
+                        let amtToDiscount = parseInt($('#amountToPay').val());
+
+                        let calcDiscount = (amtToDiscount * discountRate) / 100;
+                        let finalAmt = (amtToDiscount - calcDiscount);
+
+                        $('#amountPayable').text(numberFormat(finalAmt));
+                        $('#amountToPay').val(finalAmt);
+                        
+                        Swal.fire({
+                            title: "Success Message",
+                            text: "Discount Calculated & Applied",
+                            icon: "success",
+                            confirmButtonText: 'OK'
+                        });
                     }else{
-                        $('#discountCalcMsg').text(response.mgs);
+                        Swal.fire({
+                            title: "Error Message",
+                            text: "Either You're not qualified for the discount or the discount is expired!",
+                            icon: "error",
+                            confirmButtonText: 'OK'
+                        });
                     }
 
                     loader.removeClass('d-flex');

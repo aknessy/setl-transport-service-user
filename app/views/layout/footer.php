@@ -118,6 +118,7 @@
     <script src="<?=base_url()?>assets/js/wow.min.js"></script>
     <script src="<?=base_url()?>assets/js/main.js"></script>
     <script src="<?=base_url()?>assets/js/jquery.nice-select.min.js"></script>
+    <script src="<?=base_url()?>assets/js/number.format.js"></script>
 
     <script>
         $(function(){
@@ -137,7 +138,7 @@
     </script>
 
     <?php 
-        if(NULL !== $this->session->flashdata('error')){?>
+        if($this->session->flashdata('error')){?>
             <script>
                 Swal.fire({
                     title: "Error Message",
@@ -154,7 +155,7 @@
         <?php
         }
 
-        if(NULL !== $this->session->flashdata('success')){?>
+        if($this->session->flashdata('success')){?>
             <script>
                 Swal.fire({
                     title: "Success Message",
@@ -166,7 +167,7 @@
         <?php
         }
 
-        if(NULL !== $this->session->flashdata('warning')){?>
+        if($this->session->flashdata('warning')){?>
             <script>
                 Swal.fire({
                     title: "Warning Message",

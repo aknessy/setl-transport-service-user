@@ -68,7 +68,7 @@ if($logo !== FALSE){
 imagepng($out,$imgname);
 imagedestroy($out);
 
-$selected_seats = $record->seats;
+$selected_seats = $user_selected_seats;
 $split = NULL;
 $total_amount = 0;
 
@@ -91,7 +91,7 @@ else $split = $selected_seats;
 </style>
 
 <?php 
-    $selected_seats = $record->seats;
+    $selected_seats = $user_selected_seats;
     $split = NULL;
     $total_amount = 0;
     $customer = NULL;
@@ -99,8 +99,8 @@ else $split = $selected_seats;
     if(strpos($selected_seats, ',') == TRUE) $split = explode(',', $selected_seats);
     else $split = $selected_seats;
 
-    if($record->customer_id){
-        $customer = $this->customer_m->get_customer($record->customer_id); 
+    if($this->session->loggedIn == TRUE || $this->session->loggedInUserID != NULL){
+        $customer = $this->customer_m->get_customer($this->session->loggedInUserID); 
     }
 ?>
 <main>
@@ -169,13 +169,13 @@ else $split = $selected_seats;
                                                     <td>
                                                         <div class="d-flex flex-column align-items-start justify-content-start">
                                                             <h5 class="fw-semibold fs-18 mb-1">Traveling From</h5>
-                                                            <p class="text-muted fs-14 mb-0"><?=$this->buses_terminal_m->get_terminal($record->traveling_from)->terminal_name?></p>
+                                                            <p class="text-muted fs-14 mb-0"><?=$this->buses_terminal_m->get_terminal($traveling_from)->terminal_name?></p>
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <div class="d-flex flex-column align-items-start justify-content-start">
                                                             <h5 class="fw-semibold fs-18 mb-1">Traveling To</h5>
-                                                            <p class="text-muted fs-14 mb-0"><?=$this->buses_terminal_m->get_terminal($record->arriving_at)->terminal_name?></p>
+                                                            <p class="text-muted fs-14 mb-0"><?=$this->buses_terminal_m->get_terminal($traveling_to)->terminal_name?></p>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -184,7 +184,7 @@ else $split = $selected_seats;
                                                         <div class="d-flex align-items-center justify-content-between py-2 px-2 rounded bg-light">                                                    
                                                             <div class="d-flex flex-column align-items-start justify-content-start">
                                                                 <h5 class="fw-semibold fs-18 mb-1">Departure Time</h5>
-                                                                <p class="text-muted fs-14 mb-0"><?=$record->departure_time?></p>
+                                                                <p class="text-muted fs-14 mb-0"><?=$booking->departure_time?></p>
                                                             </div>                                                    
                                                         </div>
                                                     </td>
@@ -247,7 +247,7 @@ else $split = $selected_seats;
                                                     <td>
                                                         <div class="d-flex flex-column align-items-start justify-content-start py-2 px-2 bg-secondary-subtle rounded mb-2">
                                                             <h5 class="fw-semibold fs-18 mb-1">Departure Date</h5>
-                                                            <p class="text-muted fs-14 mb-0"><?=(NULL != $record->departure_date ? date('F jS, Y', strtotime($record->departure_date)) : 'Not Specified')?></p>
+                                                            <p class="text-muted fs-14 mb-0"><?=(NULL != $booking->departure_date ? date('F jS, Y', strtotime($booking->departure_date)) : 'Not Specified')?></p>
                                                         </div> 
                                                         <div class="d-flex flex-column align-items-start py-2 px-2 bg-secondary-subtle rounded">
                                                             <h5 class="fw-semibold fs-16 mb-1">Next of Kin Information</h5>

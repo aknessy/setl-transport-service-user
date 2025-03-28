@@ -17,7 +17,7 @@ class Invoicing extends CI_Controller {
             [
                 'buses_m', 
                 'buses_terminal_m', 
-                'Booking_m', 
+                'booking_m', 
                 'tfare_m', 
                 'customer_m', 
                 'invoicing_m'
@@ -28,9 +28,7 @@ class Invoicing extends CI_Controller {
         $this->load->library('pagination');
 	}
 
-    public function index(){
-        echo 'Welcome to invoice!';
-    }
+    public function index(){}
 
     public function invoice($order_id){
         $is_logged_in = FALSE;
@@ -43,20 +41,17 @@ class Invoicing extends CI_Controller {
         
         if(empty($invoice_record))
         {
-            // $booking_record = NULL
-            // if($this->session->loggedIn == TRUE || $this->session->loggedInUserID != NULL)
-            // {
-            //     $booking_record = $this->Booking_m->get_one_reservation($invoice_record->booking_id);
-            // }else{
-            //     $booking_record = $this->Booking_m->get_reservation_without_customer($invoice_record->booking_id);
-            // }
-
             $this->session->set_flashdata('error', 'No invoice record found for the given Order ID `'. $order_id . '`');
             redirect(base_url('booking'));
         }
+
+        $booking_record = $this->booking_m->get_booking_rel_inv($invoice_record->booking_id);
         
-        $this->data['traveling_from'] = $invoice_record->traveling_from;
-        $this->data['traveling_to'] = $invoice_record->arriving_at;
+        $this->data['traveling_from'] = $booking_record->traveling_from;
+        $this->data['traveling_to'] = $booking_record->arriving_at;
+        $this->data['user_selected_seats'] = $booking_record->seats;
+        
+        $this->data['booking'] = $booking_record;
 
         $this->data['title'] = self::page_title . 'Payment Invoice';
         $this->data['invoice'] = $invoice_record;

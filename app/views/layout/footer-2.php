@@ -23,6 +23,10 @@
     <script src="<?=base_url()?>assets/js/wow.min.js"></script>
     <script src="<?=base_url()?>assets/js/main.js"></script>
     <script src="<?=base_url()?>assets/js/jquery.nice-select.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?=base_url()?>assets/js/number.format.js"></script>
 
     <script>
         $(function(){
@@ -40,6 +44,44 @@
             $('.travelDate').flatpickr(travelDateOptions)
         })
     </script>
+
+    <?php if($this->session->flashdata('success')){ ?>
+        <script>
+        Toastify({
+            text: "<?=$this->session->flashdata('success')?>",
+            duration: 5000,
+            // destination: "https://github.com/apvarun/toastify-js",
+            // newWindow: true,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "right", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: "#15deb9",
+            },
+            onClick: function() {} // Callback after click
+        }).showToast();
+        </script>
+    <?php } ?>
+
+    <?php if($this->session->flashdata('error')){ ?>
+        <script>
+        Toastify({
+            text: "<?=$this->session->flashdata('error')?>",
+            duration: 5000,
+            // destination: "https://github.com/apvarun/toastify-js",
+            // newWindow: true,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "right", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: "#f9896b",
+            },
+            onClick: function() {} // Callback after click
+        }).showToast();
+        </script>
+    <?php } ?>
 
     </body>
 </html>

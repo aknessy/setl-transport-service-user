@@ -145,8 +145,50 @@ class Booking extends CI_Controller {
     }
 
     public function reserve($bus_id, $destination, $origin, $time, $date){
-        $bus = $this->buses_m->get_bus_by_id($bus_id);
+        $bus_seats = $this->buses_m->get_bus_seats($bus_id);
+        
+        /**
+         * If seats have been selected/reserved in the past 30 minutes
+         * reset the seats in that bus to 'unreserved'.
+         */
+        if($bus_seats)
+        {
+            $currentDateTime = date('Y-m-d H:i:s');
+            $currentTimestamp = strtotime($currentDateTime);
+
+            foreach($bus_seats as $seat){
+                // Avoid updating the driver's seat
+                if($seat->id != 1){
+                    // Ensure that there's a seat reserved time & the seat was not rescheduled
+                    if($seat->reserved_time && $seat->is_rescheduled == 0)
+                    {
+                        //Specify the target timestamp
+                        $targetDate = $seat->reserved_time;
+                        $targetTimestamp = strtotime($targetDate);
+
+                        //Calculate the difference in milliseconds
+                        $timeDiff = $currentTimestamp - $targetTimestamp;
+                        
+                        //Convert the time difference to minutes
+                        $minuteDiff = $timeDiff /  60;
+                        
+                        if($minuteDiff >= 30){
+                            $update = [
+                                'is_reserved' => 0,
+                                'reserved_time' => NULL
+                            ];
+
+                            $this->buses_m->update_reserved_seats($bus_id, $seat->id, $update);
+                        }
+                    }
+                }
+            }
+        }
+
         $saved_seats = $this->buses_m->get_bus_seats($bus_id);
+
+        $bus = $this->buses_m->get_bus_by_id($bus_id);
+        //$saved_seats = $this->buses_m->get_bus_seats($bus_id);
         $cost = $this->tfare_m->traveling_cost($origin, $destination);
         $cost_of_travel = (!empty($cost) ? $cost->amount : 0);
 
@@ -237,7 +279,7 @@ class Booking extends CI_Controller {
                         'arriving_at' => $destination,
                         'seats' => $selected_seats,
                         'total_seats' => $count_seats,
-                        'departure_time' => SCHEDULE_TIME[$time],
+                        'departure_time' => self::SCHEDULE_TIME[$time],
                         'departure_date' => $date,
                         'active' => 1,
                         'created_at' => $created_on

@@ -24,15 +24,15 @@ class Tfare extends CI_Controller {
 
     public function calculate_discount_price(){
         if($_POST){
-            $customer_id = 'c325d24b-6699-45fa-981b-0fa4afb6faa6';//This should be retrieved from the session
+            $customer_id = $this->session->loggedInUserID;
 
             $discount_code = $this->input->post('discountCode');
-            $origin = $this->input->post('origin');
-            $destination = $this->input->post('destination');
+            // $origin = $this->input->post('origin');
+            // $destination = $this->input->post('destination');
 
             $discount = $this->tfare_m->get_discount_by_code($discount_code);
-            $travel_cost = $this->tfare_m->traveling_cost($origin, $destination);
-            $payable_amt = 0;
+            // $travel_cost = $this->tfare_m->traveling_cost($origin, $destination);
+            $discount_to_apply = 0;
             $msg = '';
 
             if(!empty($discount)){
@@ -53,11 +53,11 @@ class Tfare extends CI_Controller {
                             $num_customer_travels = $this->count_customer_travels($customer_id);
                             $qualified_num_travels = intval($discount->min_num_of_travels);
 
-                            if($num_customer_travels == $qualified_num_travels){
-                                $cost = (!empty($travel_cost) ? $travel_cost->amount : 0);
-                                $amt_to_discount = $this->actual_discount_amt($percent_discounted, $cost);
-                                $payable_amt = ($cost - $amt_to_discount);
-                                
+                            if($num_customer_travels >= $qualified_num_travels){
+                                //$cost = (!empty($travel_cost) ? $travel_cost->amount : 0);
+                                //$amt_to_discount = $this->actual_discount_amt($percent_discounted, $cost);
+                                //$payable_amt = ($cost - $amt_to_discount);
+                                $discount_to_apply = $percent_discounted;
                                 $msg = 'Discount Calculated';
                             }else{
                                 $msg = 'Customer Not Qualified';
@@ -69,10 +69,10 @@ class Tfare extends CI_Controller {
                             $min_amt_to_qualify = $discount->min_amt;
 
                             if($amt_customer_spent >= $min_amt_to_qualify){
-                                $cost = (!empty($travel_cost) ? $travel_cost->amount : 0);
-                                $amt_to_discount = $this->actual_discount_amt($percent_discounted, $cost);
-                                $payable_amt = ($cost - $amt_to_discount);
-
+                                //$cost = (!empty($travel_cost) ? $travel_cost->amount : 0);
+                                //$amt_to_discount = $this->actual_discount_amt($percent_discounted, $cost);
+                                //$payable_amt = ($cost - $amt_to_discount);
+                                $discount_to_apply = $percent_discounted;
                                 $msg = 'Discount Calculated';
                             }else{
                                 $msg = 'Customer Not Qualified';
@@ -90,7 +90,7 @@ class Tfare extends CI_Controller {
 
             echo json_encode(
                 [
-                    'payable_amt' => $payable_amt,
+                    'applicable_discount' => $discount_to_apply,
                     'msg' => $msg
                 ]
             );

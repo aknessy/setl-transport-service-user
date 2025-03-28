@@ -9630,8 +9630,8 @@ textarea {
     	30. login
 ===============================*/
 .tg-login-wrapper {
-  padding: 100px 85px 100px;
-  background: var(--tp-common-white);
+  padding: 50px 35px 60px;
+  background: #ffffff;
   box-shadow: 0px 30px 60px rgba(3, 4, 28, 0.1);
 }
 @media (max-width: 575px) {
@@ -9665,7 +9665,8 @@ textarea {
   border-width: 1px!important;
 }
 
-.btn-custom-indigo{
+.btn-custom-indigo,
+.btn-custom-indigo:disabled{
   background: #560ce3; 
   border-color: #560ce3;
   color: #ffffff;
@@ -9674,7 +9675,8 @@ textarea {
 .btn-custom-indigo:hover,
 .btn-custom-indigo:focus,
 .btn-custom-indigo:active,
-.btn-custom-indigo:visited{
+.btn-custom-indigo:visited,
+.btn-custom-indigo:disabled{
   background: #520ad6!important; 
   border-color: #520ad6;
   color: #ffffff;
@@ -9722,6 +9724,36 @@ textarea {
 
 #rating-indicator span {
   font-weight: bold;
+}
+
+.profile-nav{
+  list-style-type: none;
+  padding-left: 15px;
+  margin-bottom: 25px;
+}
+
+.profile-nav li{
+  list-style: none;
+  display: block;
+  margin: 10px 0;
+}
+
+.profile-nav li a{
+  padding: 15px 15px 15px 25px;
+  font-size: 1.1rem;
+  background-color: transparent;
+  color: inherit;
+  border: 1px solid transparent;
+}
+
+.profile-nav li a.active,
+.profile-nav li a:active,
+.profile-nav li a:visited,
+.profile-nav li a:hover,
+.profile-nav li a:focus{
+  background-color: #ffffff;
+  border-color: rgb(245, 245, 245);
+  border-radius: 12px 0 0 12px;
 }
 
 /*# sourceMappingURL=main.css.map */
