@@ -474,7 +474,8 @@ $config['csrf_regenerate'] = TRUE;
 $config['csrf_exclude_uris'] = [
     'customer/get_lgas',
     'tfare/calculate_discount_price',
-    'booking/available'
+    'booking/available',
+    'customer/travelDatatableAjax'
 ];
 
 /*

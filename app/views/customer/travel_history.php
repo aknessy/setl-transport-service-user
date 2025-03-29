@@ -103,14 +103,16 @@
                                             <?php
                                                 if($travel_record){ $i = 1; ?>
                                                 <div class="table-responsive" style="overflow-x: auto;">
-                                                    <table class="table datatable table-bordered table-hover table-actions" id="travelHistoryTable">
+                                                    <table class="table datatable table-bordered table table-striped-columns table-sm" id="travelHistoryTable">
                                                         <thead>
                                                             <tr>
-                                                                <th>S/No</th>
-                                                                <th>Departed From</th>                                    
-                                                                <th>Arrived At</th>
-                                                                <th>Vehicle</th>
-                                                                <th>Date</th>                                    
+                                                                <th class="fw-semibold" style="font-size:12px">S/No</th>
+                                                                <th class="fw-semibold" style="font-size:12px">Vehicle</th>
+                                                                <th class="fw-semibold" style="font-size:12px">Departed From</th>                                    
+                                                                <th class="fw-semibold" style="font-size:12px">Arriving At</th>
+                                                                <th class="fw-semibold" style="font-size:12px">Travel Time</th>
+                                                                <th class="fw-semibold" style="font-size:12px">Date</th>     
+                                                                <th></th>                               
                                                             </tr>
                                                         </thead>
                                                         
@@ -164,7 +166,8 @@
                 { data: "depart_from" },                
                 { data: "arrived_at" },
                 { data: 'travel_time' },
-                { data: "travel_date" }
+                { data: "travel_date" },
+                { data: "action" }
             ],
             order: [], // no initial order
             columnDefs: [
@@ -176,7 +179,7 @@
                     }
                 },
                 {
-                    targets: [4],
+                    targets: [5],
                     orderable: false
                 }
             ]

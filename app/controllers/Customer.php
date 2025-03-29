@@ -27,7 +27,7 @@ class Customer extends CI_Controller {
     public function __construct(){
 		parent::__construct();
        
-		$this->load->model(['customer_m', 'rating_m']);
+		$this->load->model(['customer_m', 'rating_m', 'buses_terminal_m']);
 		$this->load->helper(['random_uuid', 'random_string', 'password_hash', 'locale']);
         $this->load->library(['pagination','mailer']);
 	}
@@ -219,7 +219,7 @@ class Customer extends CI_Controller {
     }
 
     public function travelDatatableAjax(){
-        $columns = ['vehicle', 'depart_from', 'arrive_at', 'travel_time', 'travel_date'];
+        $columns = ['vehicle', 'depart_from', 'arrived_at', 'travel_time', 'travel_date', 'action'];
 
         $customer_id = $this->session->loggedInUserID;
 
@@ -240,9 +240,9 @@ class Customer extends CI_Controller {
 
         if(!empty($search)){
             $records = $this->customer_m->get_customer_travels_search($customer_id, $limit, $start, $search, $order, $dir);
-            $totalFiltered = $this->buses_m->get_customer_travels_search_count($customer_id, $search);
+            $totalFiltered = $this->customer_m->get_customer_travels_search_count($customer_id, $search);
         }else{
-            $records = $this->buses_m->get_customer_travels_search_paginated($customer_id, $limit, $start, $order, $dir);
+            $records = $this->customer_m->get_customer_travels_search_paginated($customer_id, $limit, $start, $order, $dir);
         }
         
 	    $aws_base_url = $this->settings_m->getOne(array('skey' => 'aws_base_url'))->value;
@@ -251,7 +251,10 @@ class Customer extends CI_Controller {
 	    if($records){
 		    for ($i = 0; $i < $totalFiltered; $i++){
                 $img = '';
-                
+
+                $expiry_date = (NULL!=$records[$i]->departure_date?strtotime($records[$i]->departure_date) : NULL);
+                $current_timestamp = strtotime(date('Y-m-d'));
+
                 if(!empty($records[$i]->bus_photo) && json_decode($records[$i]->bus_photo)){
                     $photo = json_decode($records[$i]->bus_photo)[0];
                     $single_photo = str_replace("\\", '', $photo);
@@ -267,17 +270,21 @@ class Customer extends CI_Controller {
 		      	$html = '<div class="d-flex align-items-center">';
 				$html .= $img;
 				$html .= '<div class="d-flex flex-column">';
-				$html .= '<h6 class="fw-bold fs-14 mb-1">' . strtoupper($records[$i]->bus_make . ' ' . $records[$i]->bus_model) . '</h6>';
-				$html .= '<p class="fw-normal fs-12 mb-0 m-0">' . $records[$i]->bus_plate_number . '</p>';
+				$html .= '<h6 class="fw-semibold mb-1" style="font-size:13px">' . strtoupper($records[$i]->bus_make . ' ' . $records[$i]->bus_model) . '</h6>';
+				$html .= '<p class="fw-normal mb-0 m-0" style="font-size:13px">' . $records[$i]->bus_plate_number . '</p>';
 				$html .= '</div>';
 				$html .= '</div>';
 
 		         $data[] = [
                     "vehicle" => $html,
-                    "depart_from" => ($traveling_from ? $traveling_from->terminal_name : ''),
-		            "arriving_at" => ($arriving_at ? $arriving_at->terminal_name : ''),
-                    'travel_time' => self::SCHEDULE_TIME[$records[$i]->departure_time],
-                    'travel_date' => date('F jS, Y', strtotime($records[$i]->departure_date))
+                    "depart_from" => '<span class="d-flex align-self-start"  style="font-size:12px">' . ($traveling_from ? $traveling_from->terminal_name : '') . "</span>",
+		            "arrived_at" => '<span class="d-flex align-self-start"  style="font-size:12px">' . ($arriving_at ? $arriving_at->terminal_name : '') . "</span>",
+                    'travel_time' => '<span class="d-flex align-self-start"  style="font-size:12px">' . $records[$i]->departure_time . '</span>',
+                    'travel_date' => '<span class="d-flex align-self-start"  style="font-size:12px">' . $records[$i]->departure_date . '</span>',
+                    'action' => $current_timestamp < $expiry_date ? '
+		            	<a href="' . base_url('ticketing/ticket/' . $records[$i]->order_id) . '" role="button" disabled>
+							<span class="badge text-bg-primary"><i class="fa-solid fa-print-slash"></i></span></a>' : 
+                        '<a href="#" role="button"><span class="badge text-bg-secondary"><i class="fa-solid fa-print"></i></span></a>'
 		        ];
 		    }
 
