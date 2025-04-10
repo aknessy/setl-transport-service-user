@@ -43,12 +43,12 @@ class Payment extends CI_Controller {
             ]);
 
 		$this->load->helper(['random_uuid', 'random_string']);
+        $this->load->library('mailer');
 	}
 
     public function index(){
         if($_POST){
             $order_id = $this->input->post('orderID');
-            
             $payment_desc = $this->input->post('paymentDesc');
             $payment_amt = $this->input->post('amount');
 
@@ -82,19 +82,35 @@ class Payment extends CI_Controller {
                 $save_info = $this->input->post('save_info');
 
                 if($save_info){
-                    $customer = [
-                        'customer_id' => generateUuid(),
-                        'surname' => $payer_lname,
-                        'middle_name' => '',
-                        'first_name' => $payer_fname,
-                        'phone' => $payer_phone,
-                        'email' => $payer_email,
-                        'nok_name' => $nok,
-                        'nok_phone' => $nok_phone,
-                        'created_on' => date('Y-m-d H:i:s')
-                    ];
+                    $this->form_validation->set_rules($this->booking_rules());
 
-                    $create = $this->customer_m->create_customer($customer);
+                    if($this->form_validation->run() == FALSE){
+                        $this->session->set_flashdata('form_errors', validation_errors('<span>','</span>'));
+                        $this->session->set_flashdata('form_data', $this->input->post());
+                        
+                        redirect(base_url('invoicing/invoice/'.$order_id));
+                    }else{
+                        $customer = [
+                            'customer_id' => generateUuid(),
+                            'surname' => $payer_lname,
+                            'first_name' => $payer_fname,
+                            'phone' => $payer_phone,
+                            'email' => $payer_email,
+                            'nok_name' => $nok,
+                            'nok_phone' => $nok_phone,
+                            'created_on' => date('Y-m-d H:i:s')
+                        ];
+
+                        $create = $this->customer_m->create_customer($customer);
+                        unset($this->session->form_data);
+
+                        $body = 'Hey ' . $payer. '<br/>Use this code: ' . $verification_code . '<br/> to verify your email!';
+                        $subject = 'E-mail Verification';
+                        
+                        $this->mailer->send($payer_email,$name,$body,$subject);
+
+                        $this->session->set_flashdata('success', 'Customer Information saved! Please check your registered email for a verification code.');
+                    }
                 }
             }
 
@@ -146,7 +162,7 @@ class Payment extends CI_Controller {
                         'booking/reserve/'.$booking->bus_id.'/'
                         .$booking->arriving_at.'/'
                         .$booking->traveling_from.'/'
-                        .REVERSE_SCHEDULE_TIME[$booking->departure_time].'/'
+                        .self::REVERSE_SCHEDULE_TIME[$booking->departure_time].'/'
                         .str_replace('-',':',$booking->departure_date)
                     )
                 );
@@ -262,4 +278,29 @@ class Payment extends CI_Controller {
             redirect(base_url('bookings'));
         }
 	}
+
+    public function booking_rules(){
+        return [
+            [
+                'field' => 'last_name',
+                'label' => 'Last Name',
+                'rules' => 'trim|required'
+            ],
+            [
+                'field' => 'first_name',
+                'label' => 'First Name',
+                'rules' => 'trim|required'
+            ],
+            [
+                'field' => 'email',
+                'label' => 'Email Address',
+                'rules' => 'trim|required|valid_email'
+            ],
+            [
+                'field' => 'phone',
+                'label' => 'Phone Number',
+                'rules' => 'trim|required|min_length[10]'
+            ]
+        ];
+    }
 }

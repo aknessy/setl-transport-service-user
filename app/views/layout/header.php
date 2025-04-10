@@ -27,6 +27,15 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css" />
 
     <script src="<?=base_url()?>assets/js/vendor/jquery.js"></script>
+
+    <script>
+        setInterval(function() {
+            fetch('<?=base_url('booking/update_seats_reservation_status')?>')
+            .then(response => response.json())
+            .then(data => console.log(data.message))
+            .catch(error => console.error("Error freeing expired seats:", error));
+        }, 1800000); // Runs every 30 minutes (1800000 milliseconds)
+    </script>
 </head>
 
 <body>

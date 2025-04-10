@@ -60,7 +60,7 @@
     <div class="tg-booking-form-area tg-booking-form-grid-space pb-50">
         <div class="container">
             <?=form_open(base_url('payment'), ['id' => 'payInvoiceForm', 'method' => 'POST', 'class' => 'row'])?>
-                <div id="print-section" class="<?=$this->session->loggedIn == TRUE ? 'col-lg-12':'col-lg-7 col-xl-8 col-sm-12'?>">
+                <div id="printSection" class="<?=$this->session->loggedIn == TRUE ? 'col-lg-12':'col-lg-7 col-xl-8 col-sm-12'?>">
                     <div class="card">
                         <div class="card-body bg-light"> 
                             <div class="d-flex align-items-center justify-content-between">
@@ -73,7 +73,24 @@
                                 </div>   
                             </div>     
                         </div>
-                        <div class="card-body">                    
+                        <div class="card-body">
+                            <?php
+                                if($this->session->form_errors){
+                                    $errors = explode('.', $this->session->form_errors);
+
+                                    echo '<div class="row mb-2">';
+                                    echo '<div class="alert alert-danger py-2 px-2" role="alert">';
+
+                                    foreach($errors as $key => $error){
+                                        echo '- ' . $error . '<br />';
+                                    }
+                                    
+                                    echo '</div>';
+                                    echo '</div>';
+                                    $this->session->unset_userdata('form_errors');
+                                }
+                            ?>
+
                             <div class="row row-cols-3 d-flex align-items-center justify-content-between mb-25">
                             <?php 
                                 if($this->session->loggedIn == TRUE){
@@ -270,13 +287,17 @@
                             <div class="row mb-5">                                
                                 <div class="col-lg-12">
                                     <div class="form-floating mb-3">
-                                        <input type="text" class="form-control text-muted fs-6" id="surname" placeholder="Last Name" name="last_name">
+                                        <?php
+                                            $fname = (isset($this->session->form_data['last_name'])?$this->session->form_data['last_name']:NULL);
+                                            $lname = (isset($this->session->form_data['first_name'])?$this->session->form_data['first_name']:NULL);
+                                        ?>
+                                        <input type="text" class="form-control text-muted fs-6" id="surname" placeholder="Last Name" name="last_name" value="<?=$lname?$lname:''?>" required>
                                         <label for="surname" class="fw-semibold fs-6">Last Name</label>
                                     </div>
                                 </div>
                                 <div class="col-lg-12">
                                     <div class="form-floating mb-3">
-                                        <input type="text" class="form-control text-muted fs-6" id="firstname" placeholder="First name" name="first_name">
+                                        <input type="text" class="form-control text-muted fs-6" id="firstname" placeholder="First name" name="first_name" value="<?=$fname?$fname:''?>" required>
                                         <label for="firstname" class="fw-semibold fs-6">First name</label>
                                     </div>
                                 </div>
@@ -284,13 +305,17 @@
                             <div class="row mb-5">
                                 <div class="col-lg-12">
                                     <div class="form-floating mb-3">
-                                        <input type="text" class="form-control text-muted fs-6" id="email" placeholder="Email" name="email">
+                                        <?php 
+                                            $email = (isset($this->session->form_data['email'])?$this->session->form_data['email']:NULL);
+                                            $phone = (isset($this->session->form_data['phone'])?$this->session->form_data['phone']:NULL);
+                                        ?>
+                                        <input type="text" class="form-control text-muted fs-6" id="email" placeholder="Email" name="email" value="<?=$email?$email:''?>" required>
                                         <label for="email" class="fw-semibold fs-6">Email</label>
                                     </div>
                                 </div>
                                 <div class="col-lg-12">
                                     <div class="form-floating mb-3">
-                                        <input type="text" class="form-control text-muted fs-6" id="phone" placeholder="Phone Number" name="phone">
+                                        <input type="text" class="form-control text-muted fs-6" id="phone" placeholder="Phone Number" name="phone" value="<?=$phone?$phone:''?>" required>
                                         <label for="phone" class="fw-semibold fs-6">Phone Number</label>
                                     </div>
                                 </div>
@@ -314,7 +339,10 @@
                             </div>
                             <div class="row">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="1" id="flexCheckDefault" name="save_info">
+                                    <?php 
+                                        $saveInfo = (isset($this->session->form_data['save_info'])?$this->session->form_data['save_info']:0);
+                                    ?>
+                                    <input class="form-check-input" type="checkbox" value="1" id="flexCheckDefault" name="save_info" <?=$saveInfo== 1 ? 'checked':''?>>
                                     <label class="form-check-label fs-6" for="flexCheckDefault">
                                         <small>Save this information for the future. You never have to do this ever again. With this, you will utilise other functions of our website like <em>discounts</em>, <em>reviews</em>, etc.</small>
                                     </label>
@@ -329,7 +357,7 @@
                         <div class="row d-flex justify-content-end">                        
                             <div class="col-lg-12 col-xl-4">
                                 <div class="float-end d-print-none mt-2 mt-md-0">
-                                    <a href="javascript:window.print()" class="btn btn-lg btn-outline-dark"><span><i class="fa-solid fa-print"></i></span>&nbsp;Print</a>
+                                    <button type="button" onclick="printDiv()" class="btn btn-lg btn-outline-dark"><span><i class="fa-solid fa-print"></i></span>&nbsp;Print</button>
                                     <button type="submit" class="btn btn-lg btn-custom-indigo">Continue to Payment</button>                                
                                 </div>
                             </div>
@@ -404,4 +432,32 @@
             })
         });
     });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+     function printDiv() {
+          const div = document.getElementById("printSection"); // Target div
+
+          html2canvas(div, { scale: 2 }).then(canvas => {
+               const imgData = canvas.toDataURL("image/png"); // Convert to image URL
+               const printWindow = window.open("", "_blank"); // Open a new tab
+
+               printWindow.document.write(`
+                    <html>
+                    <head>
+                         <title>Print</title>
+                         <style>
+                              @page { size: A4 landscape; margin: 0; }
+                              body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+                              img { max-width: 100%; max-height: 100vh; }
+                         </style>
+                    </head>
+                    <body>
+                         <img src="${imgData}" onload="window.print(); window.close();" />
+                    </body>
+                    </html>
+               `);
+          });
+     }
 </script>

@@ -86,7 +86,7 @@
                                 </div>
                                 <div class="col-lg-3 col-md-3 col-sm-12">
                                     <div class="mb-2 form-floating">
-                                        <input type="password" class="form-control form-control-sm fs-6 form-control-custom travelDate" name="travel_date" id="departureDate" placeholder="Travel Date">
+                                        <input type="text" class="form-control form-control-sm fs-6 form-control-custom travelDate" name="travel_date" id="departureDate" placeholder="Travel Date">
                                         <label for="departureDate" class="form-label fs-10 mb-0 text-muted">What day are you traveling?</label>                                        
                                     </div>
                                 </div>

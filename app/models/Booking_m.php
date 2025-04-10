@@ -129,4 +129,18 @@ class Booking_m extends CI_Model {
         return $this->db->get_where($this->table, ['id' => $booking_id])->row();
     }
 
+    /**
+     * We will use the code below to try and free up reserved seats from our buses.
+     * This code will run every specific time (say 30 minutes) via javascript.
+     */
+    public function get_expired_bookings(){
+        $currentTimestamp = date('Y-m-d H:i:s');
+
+        return $this->db->select('bus_id, seats')
+            ->from($this->table)
+            ->where('departure_date <', $currentTimestamp)
+            ->get()
+            ->result();
+    }
+
 }

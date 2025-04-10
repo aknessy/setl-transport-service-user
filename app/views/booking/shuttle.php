@@ -566,8 +566,8 @@ else $rows = ceil($seats_count / $columns); // Rounds up to ensure all seats are
                 } else {
                     selected_seats.pop();
 
-                    if(travel_cost == 0) amt_reserved -= seat_cost
-                    else amt_reserved -= travel_cost
+                    if(seat_cost == 0) amt_reserved -= travel_cost
+                    else amt_reserved -= seat_cost
 
                     reserved_seats -= 1;
 

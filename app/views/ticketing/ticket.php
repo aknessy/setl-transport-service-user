@@ -293,7 +293,7 @@ else $split = $selected_seats;
                             </div>
                             <div class="col-lg-12 col-xl-4">
                                 <div class="float-end d-print-none mt-2 mt-md-0">
-                                    <a href="javascript:window.print()" class="btn btn-lg btn-custom-indigo"><span><i class="fa-solid fa-print"></i></span>&nbsp;Print</a>                                
+                                    <button type="button" onclick="printDiv()" class="btn btn-lg btn-custom-indigo"><span><i class="fa-solid fa-print"></i></span>&nbsp;Print</button>                                
                                 </div>
                             </div>
                         </div>
@@ -303,3 +303,31 @@ else $split = $selected_seats;
         </div>
     </div>
 </main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+     function printDiv() {
+          const div = document.getElementById("printSection"); // Target div
+
+          html2canvas(div, { scale: 2 }).then(canvas => {
+               const imgData = canvas.toDataURL("image/png"); // Convert to image URL
+               const printWindow = window.open("", "_blank"); // Open a new tab
+
+               printWindow.document.write(`
+                    <html>
+                    <head>
+                         <title>Print</title>
+                         <style>
+                              @page { size: A4 landscape; margin: 0; }
+                              body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+                              img { max-width: 100%; max-height: 100vh; }
+                         </style>
+                    </head>
+                    <body>
+                         <img src="${imgData}" onload="window.print(); window.close();" />
+                    </body>
+                    </html>
+               `);
+          });
+     }
+</script>

@@ -145,46 +145,6 @@ class Booking extends CI_Controller {
     }
 
     public function reserve($bus_id, $destination, $origin, $time, $date){
-        $bus_seats = $this->buses_m->get_bus_seats($bus_id);
-        
-        /**
-         * If seats have been selected/reserved in the past 30 minutes
-         * reset the seats in that bus to 'unreserved'.
-         */
-        if($bus_seats)
-        {
-            $currentDateTime = date('Y-m-d H:i:s');
-            $currentTimestamp = strtotime($currentDateTime);
-
-            foreach($bus_seats as $seat){
-                // Avoid updating the driver's seat
-                if($seat->id != 1){
-                    // Ensure that there's a seat reserved time & the seat was not rescheduled
-                    if($seat->reserved_time && $seat->is_rescheduled == 0)
-                    {
-                        //Specify the target timestamp
-                        $targetDate = $seat->reserved_time;
-                        $targetTimestamp = strtotime($targetDate);
-
-                        //Calculate the difference in milliseconds
-                        $timeDiff = $currentTimestamp - $targetTimestamp;
-                        
-                        //Convert the time difference to minutes
-                        $minuteDiff = $timeDiff /  60;
-                        
-                        if($minuteDiff >= 30){
-                            $update = [
-                                'is_reserved' => 0,
-                                'reserved_time' => NULL
-                            ];
-
-                            $this->buses_m->update_reserved_seats($bus_id, $seat->id, $update);
-                        }
-                    }
-                }
-            }
-        }
-
         $saved_seats = $this->buses_m->get_bus_seats($bus_id);
 
         $bus = $this->buses_m->get_bus_by_id($bus_id);
@@ -201,7 +161,7 @@ class Booking extends CI_Controller {
         $this->data['travel_time'] = $time;
         $this->data['travel_date'] = $date;
 
-        $this->data['subview'] = 'booking/' . $bus->bus_type;        
+        $this->data['subview'] = 'booking/shuttle';        
         $this->data['cost_of_travel'] = $cost_of_travel;
         
         if($_POST)
@@ -264,107 +224,101 @@ class Booking extends CI_Controller {
                     $update_counter++;
             }
 
-            if($update_counter > 0)
+            if($this->session->loggedIn == TRUE || NULL != $this->session->loggedInUserID)
             {
-                if($this->session->loggedIn == TRUE || NULL != $this->session->loggedInUserID)
-                {
-                    $customer_id = $this->session->loggedInUserID;
+                $customer_id = $this->session->loggedInUserID;
 
-                    $customer = $this->customer_m->get_customer($customer_id);                    
-                    
-                    $booking_data = [
-                        'customer_id' => $customer_id,
+                $customer = $this->customer_m->get_customer($customer_id);                    
+                
+                $booking_data = [
+                    'customer_id' => $customer_id,
+                    'bus_id' => $bus_id,
+                    'traveling_from' => $origin,
+                    'arriving_at' => $destination,
+                    'seats' => $selected_seats,
+                    'total_seats' => $count_seats,
+                    'departure_time' => self::SCHEDULE_TIME[$time],
+                    'departure_date' => $date,
+                    'active' => 1,
+                    'created_at' => $created_on
+                ];
+
+                $insert = $this->booking_m->insert_booking_record($booking_data);
+
+                if($insert)
+                {
+                    $order_id = date('Y').strtoupper(getToken(4));
+
+                    $invoice_data = [
+                        'invoice_id' => generateUuid(),
                         'bus_id' => $bus_id,
-                        'traveling_from' => $origin,
-                        'arriving_at' => $destination,
-                        'seats' => $selected_seats,
-                        'total_seats' => $count_seats,
-                        'departure_time' => self::SCHEDULE_TIME[$time],
-                        'departure_date' => $date,
-                        'active' => 1,
-                        'created_at' => $created_on
+                        'order_id' => $order_id,
+                        'customer_id' => $customer_id,
+                        'booking_id' => $insert,
+                        'invoice_for' => 'Seat Reservation for (' . $count_seats . ') seat(s)',
+                        'amount' => $cost_of_travel,
+                        'created_at' => $created_on,
+                        'status' => 'UNPAID'
                     ];
 
-                    $insert = $this->booking_m->insert_booking_record($booking_data);
+                    $invoice_insert = $this->invoicing_m->insert_record($invoice_data);
 
-                    if($insert)
-                    {
-                        $order_id = date('Y').strtoupper(getToken(11));
-
-                        $invoice_data = [
-                            'invoice_id' => generateUuid(),
-                            'bus_id' => $bus_id,
-                            'order_id' => $order_id,
-                            'customer_id' => $customer_id,
-                            'booking_id' => $insert,
-                            'invoice_for' => 'Seat Reservation for (' . $count_seats . ') seat(s)',
-                            'amount' => $cost_of_travel,
-                            'created_at' => $created_on,
-                            'status' => 'UNPAID'
-                        ];
-
-                        $invoice_insert = $this->invoicing_m->insert_record($invoice_data);
-
-                        if($invoice_insert){
-                            $this->session->set_flashdata('success', 'Invoice Generated!');
-                            redirect(base_url('invoicing/invoice/' . $order_id));
-                        }else{
-                            $this->session->set_flashdata('error', 'Unable to generate payment invoice, please try again!');
-                            redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
-                        }
-						
+                    if($invoice_insert){
+                        $this->session->set_flashdata('success', 'Invoice Generated!');
+                        redirect(base_url('invoicing/invoice/' . $order_id));
                     }else{
-                        $this->session->set_flashdata('error','Booking records not saved!');
-						redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
+                        $this->session->set_flashdata('error', 'Unable to generate payment invoice, please try again!');
+                        redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
                     }
-                }else{
-                    $booking_data = [
-                        'bus_id' => $bus_id,
-                        'traveling_from' => $origin,
-                        'arriving_at' => $destination,
-                        'seats' => $selected_seats,
-                        'total_seats' => $count_seats,
-                        'departure_time' => $time,
-                        'departure_date' => $date,
-                        'active' => 1,
-                        'created_at' => $created_on
-                    ]; 
                     
-                    $insert = $this->booking_m->insert_booking_record($booking_data);
-
-                    if($insert)
-                    {
-                        $order_id = date('Y').strtoupper(getToken(11));
-
-                        $invoice_data = [
-                            'invoice_id' => generateUuid(),
-                            'bus_id' => $bus_id,
-                            'order_id' => $order_id,
-                            'booking_id' => $insert,
-                            'invoice_for' => 'Seat Reservation for (' . $count_seats . ') seat(s)',
-                            'amount' => $cost_of_travel,
-                            'created_at' => $created_on,
-                            'status' => 'UNPAID'
-                        ];
-                        
-                        $invoice_insert = $this->invoicing_m->insert_record($invoice_data);
-
-                        if($invoice_insert){
-                            $this->session->set_flashdata('success', 'Invoice Generated!');
-                            redirect(base_url('invoicing/invoice/' . $order_id));
-                        }else{
-                            $this->session->set_flashdata('error', 'Unable to generate payment invoice, please try again!');
-                            redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
-                        }
-						
-                    }else{                        
-                        $this->session->set_flashdata('error','Booking records not saved!');
-						redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
-                    }
+                }else{
+                    $this->session->set_flashdata('error','Booking records not saved!');
+                    redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
                 }
             }else{
-                $this->session->set_flashdata('error','Booking records not saved!');
-                redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
+                $booking_data = [
+                    'bus_id' => $bus_id,
+                    'traveling_from' => $origin,
+                    'arriving_at' => $destination,
+                    'seats' => $selected_seats,
+                    'total_seats' => $count_seats,
+                    'departure_time' => self::SCHEDULE_TIME[$time],
+                    'departure_date' => $date,
+                    'active' => 1,
+                    'created_at' => $created_on
+                ]; 
+                
+                $insert = $this->booking_m->insert_booking_record($booking_data);
+
+                if($insert)
+                {
+                    $order_id = date('Y').strtoupper(getToken(4));
+
+                    $invoice_data = [
+                        'invoice_id' => generateUuid(),
+                        'bus_id' => $bus_id,
+                        'order_id' => $order_id,
+                        'booking_id' => $insert,
+                        'invoice_for' => 'Seat Reservation for (' . $count_seats . ') seat(s)',
+                        'amount' => $cost_of_travel,
+                        'created_at' => $created_on,
+                        'status' => 'UNPAID'
+                    ];
+                    
+                    $invoice_insert = $this->invoicing_m->insert_record($invoice_data);
+
+                    if($invoice_insert){
+                        $this->session->set_flashdata('success', 'Invoice Generated!');
+                        redirect(base_url('invoicing/invoice/' . $order_id));
+                    }else{
+                        $this->session->set_flashdata('error', 'Unable to generate payment invoice, please try again!');
+                        redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
+                    }
+                    
+                }else{                        
+                    $this->session->set_flashdata('error','Booking records not saved!');
+                    redirect(base_url('booking/reserve/'  . $bus_id . '/' . $destination . '/' . $origin . '/' . $time . '/' . $date));
+                }
             }
 
             redirect(base_url('invoicing/invoice/'));
@@ -372,6 +326,59 @@ class Booking extends CI_Controller {
         }else{
             $this->load->view('_layout', $this->data);
         }
+    }
+
+    public function update_seats_reservation_status(){
+        $expiredBookings = $this->booking_m->get_expired_bookings(); 
+        
+        if ($expiredBookings) {
+            foreach ($expiredBookings as $booking) {
+                $seat = $booking->seats;
+                $saved_seats = $this->buses_m->get_bus_seats($booking->bus_id);
+
+                if(strpos($seat, ',') == TRUE)
+                {
+                    $reserved_seats = explode(',', $seat);
+    
+                    foreach($saved_seats as $seat) {
+                        foreach($reserved_seats as $rseat){		
+                            $seat_id = explode(':',$rseat)[0];
+                            $seat_label = explode(':', $rseat)[1];
+
+                            if($seat_label !== 'Driver'){
+                                if ($seat->id == $seat_id && $seat->is_reserved == 1) {
+                                    $update = [
+                                        'is_reserved' => 0,
+                                        'reserved_time' => NULL
+                                    ];
+                    
+                                    $this->buses_m->update_reserved_seats($booking->bus_id, $seat_id, $update);
+                                }
+                            }
+                        }
+                    }
+                }else{
+                    $seat_id = explode(':',$seat)[0];
+                    $seat_label = explode(':', $seat)[1];
+                    
+                    foreach($saved_seats as $seat)
+                    {
+                        if($seat_label !== 'Driver'){
+                            if($seat->id == $seat_id  && $seat->is_reserved == 1){
+                                $update = [
+                                    'is_reserved' => 0,
+                                    'reserved_time' => NULL
+                                ];
+                
+                                $this->buses_m->update_reserved_seats($booking->bus_id, $seat_id, $update);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        echo json_encode(["status" => "success", "message" => "Expired seats have been freed!"]);
     }
 
 }
