@@ -83,6 +83,7 @@ class Payment extends CI_Controller {
 
                 if($save_info){
                     $this->form_validation->set_rules($this->booking_rules());
+                    $verification_code = getToken(6);
 
                     if($this->form_validation->run() == FALSE){
                         $this->session->set_flashdata('form_errors', validation_errors('<span>','</span>'));
@@ -98,13 +99,16 @@ class Payment extends CI_Controller {
                             'email' => $payer_email,
                             'nok_name' => $nok,
                             'nok_phone' => $nok_phone,
+                            'verification_code' => $verification_code,
                             'created_on' => date('Y-m-d H:i:s')
                         ];
 
                         $create = $this->customer_m->create_customer($customer);
                         unset($this->session->form_data);
 
-                        $body = 'Hey ' . $payer. '<br/>Use this code: ' . $verification_code . '<br/> to verify your email!';
+                        $body = 'Hey ' . $payer. '<br/>Your verification code is ' . $verification_code . '<br/>.';
+                        $body .= 'Follow the link below to verify your email address;<br/>';
+                        $body .= '<a href="'. base_url('customer/verifyemail') .'">Verify Email</a>';
                         $subject = 'E-mail Verification';
                         
                         $this->mailer->send($payer_email,$name,$body,$subject);
