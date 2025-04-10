@@ -141,7 +141,7 @@ else $split = $selected_seats;
         <div class="container">
             <div class="row justify-content-center mt-2">
                 <div class="col-sm-12 col-lg-10 col-md-10">
-                    <div id="print-section" class="card">
+                    <div id="printSection" class="card">
                         <div class="card-header d-flex align-items-center justify-content-start bg-success-subtle py-4 px-4">
                             <div class="bg-white text-center text-success py-4 px-4 rounded me-3">
                                 <span class="fw-semibold fs-22">
